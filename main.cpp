@@ -24,6 +24,11 @@ bool exists(int id)
 void update_submit(submit * sub)
 {
 	cout << sub->id << "\n" << ctime(&sub->created) << "\n";
+	/*int iterator1, iterator2;
+	if((iterator1 = find(sub->from_round->problem_ids.begin(), sub->from_round->problem_ids.end(), sub->problem->id))
+		!= sub->from_round->problem_ids.end())
+		if((iterator2 = find(sub->)))
+	*/
 	return;
 }
 
@@ -58,7 +63,7 @@ int add_contest(int id, contest * c)
      		stages.push_back(make_pair(row[0].as<int>(), row[1].as<int>()));
      	sort(stages.begin(), stages.end());
      	for(int i=0; i<stages.size(); i++)
-     		c->stage_ids.push_back(stages[i].second);
+     		c->lower_ids.push_back(stages[i].second);
 	}
 	catch(const exception e){
 		cerr << e.what();
@@ -85,7 +90,7 @@ int add_stage(int id, stage * s)
      		rounds.push_back(make_pair(row[0].as<int>(), row[1].as<int>()));
      	sort(rounds.begin(), rounds.end());
      	for(int i=0; i<rounds.size(); i++)
-     		s->round_ids.push_back(rounds[i].second);
+     		s->lower_ids.push_back(rounds[i].second);
 	}
 	catch(const exception e){
 		cerr << e.what();
@@ -104,7 +109,7 @@ int add_stage(int id, stage * s)
 			}
 			else
 			{
-				s->c = new contest();
+				s->c = new contest(results[0][0].as<int>());
 				add_contest(results[0][0].as<int>(), s->c);
 			}
 	}
@@ -134,7 +139,7 @@ int add_round(int id, round_ * r)
      		problems.push_back(make_pair(row[0].as<int>(), row[1].as<int>()));
      	sort(problems.begin(), problems.end());
      	for(int i=0; i<problems.size(); i++)
-     		r->problem_ids.push_back(problems[i].second);
+     		r->lower_ids.push_back(problems[i].second);
 	}
 	catch(const exception e){
 		cerr << e.what();
@@ -154,7 +159,7 @@ int add_round(int id, round_ * r)
 			}
 			else
 			{
-				r->s = new stage();
+				r->s = new stage(results[0][0].as<int>());
 				add_stage(results[0][0].as<int>(), r->s);
 			}
 	}
@@ -167,6 +172,7 @@ int add_round(int id, round_ * r)
 	return 0;
 }
 int zz = 2;
+
 
 //function keeps monitoring the changes in the submits database table
 int monitor()
@@ -195,8 +201,14 @@ int monitor()
      			//TODO: dodac written_test
      			printf("waj???!!!\n");
      			submit * sub = new submit(row);
+
+     			if(!sub->solved || !sub->problem || !sub->from_round) //unknown solver's, round's or problem's id - nothing to be done
+     				continue;
+
      			printf("noł!\n");
      			map_submits.insert(make_pair(sub->id, sub));
+     			sub->from_round->add_user(sub->solved);
+
      			if(	row[SUBMIT_STATUS].is_null() ||
      				row[SUBMIT_STATUS].as<string>() == CHECKER_UNKN_ERROR ||
      				row[SUBMIT_STATUS].as<string>() == CHECKER_PLAGIARISM ||

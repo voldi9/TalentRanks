@@ -7,6 +7,60 @@
 #define SUBMIT_STATUS 5
 #define SUBMIT_POINTS 6
 
+/*
+void round_::update(submit * sub)
+{
+	result * row = map_ids[sub->solved->id];
+	for(vector<int>::iterator it = lower_ids.begin(); it != lower_ids.end(); it++)
+	{
+		if((*it) == sub->problem->id)
+		{
+			row->points[it - lower_ids.begin()] = sub->total_points;
+			break;
+		}
+	}
+}
+*/
+
+void submit::add()
+{
+	result * row = from_round->map_ids[solved->id];
+	//update points in round...
+	for(vector<int>::iterator it = from_round->lower_ids.begin(); it != from_round->lower_ids.end(); it++)
+	{
+		if((*it) == problem->id)
+		{
+			row->points[it - from_round->lower_ids.begin()] = total_points;
+			break;
+		}
+	}
+	//... stage...
+	if(from_round->s)
+	{
+		row = from_round->s->map_ids[from_round->id];
+		for(vector<int>::iterator it = from_round->s->lower_ids.begin(); it != from_round->s->lower_ids.end(); it++)
+		{
+			if((*it) == from_round->id)
+			{
+				row->points[it - from_round->s->lower_ids.begin()] = total_points;
+				break;
+			}
+		}
+	}
+	//... and contest
+	if(from_round->s->c)
+	{
+		row = from_round->s->c->map_ids[from_round->id];
+		for(vector<int>::iterator it = from_round->s->c->lower_ids.begin(); it != from_round->s->c->lower_ids.end(); it++)
+		{
+			if((*it) == from_round->s->id)
+			{
+				row->points[it - from_round->s->c->lower_ids.begin()] = total_points;
+				break;
+			}
+		}
+	}
+}
 
 submit::~submit()
 {

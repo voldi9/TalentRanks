@@ -14,6 +14,7 @@ class submit
 		solver * solved;
 		round_ * from_round;
 		task * problem;
+		void add();
 		submit(pqxx::result::tuple sub);
 		~submit();//if(problem != NULL) delete problem; 
 					//if(solved != NULL) delete solved; }
