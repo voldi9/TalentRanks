@@ -8,7 +8,16 @@
 #define SUBMIT_POINTS 6
 
 
-submit::~submit(){}
+submit::~submit()
+{
+	map_submits.erase(id);
+	if(solved)
+		delete solved;
+	if(from_round)
+		delete from_round;
+	if(problem)
+		delete problem;
+}
 
 submit::submit(pqxx::result::tuple sub)
 {
@@ -18,16 +27,21 @@ submit::submit(pqxx::result::tuple sub)
 	strptime(sub[SUBMIT_CREATED].as<string>().c_str(), "%Y-%m-%d %H:%M:%S", &when);
 	created = mktime(&when);
 
+	solved = 0;
+	from_round = 0;
+	problem = 0;
+
 	if(!sub[SUBMIT_POINTS].is_null())
 		total_points = sub[SUBMIT_POINTS].as<int>();
 
 	if(!sub[SUBMIT_USER_ID].is_null())
 	{
-		if(map_solvers.find(sub[SUBMIT_USER_ID].as<int>()) != map_solvers.end())
-			solved = map_solvers[sub[SUBMIT_USER_ID].as<int>()];
+		if(map_solvers.find(sub[SUBMIT_USER_ID].as<int>()) != map_solvers.end()){
+			solved = map_solvers[sub[SUBMIT_USER_ID].as<int>()]; printf("stary\n"); }
 		else
 		{
-			solved = new solver();
+			printf("nowy\n");
+			solved = new solver(sub[SUBMIT_USER_ID].as<int>());
 			add_solver(sub[SUBMIT_USER_ID].as<int>(), solved);
 		}
 		solved->pointed++;
@@ -39,7 +53,7 @@ submit::submit(pqxx::result::tuple sub)
 			from_round = map_rounds[sub[SUBMIT_ROUND_ID].as<int>()];
 		else
 		{
-			from_round = new round_();
+			from_round = new round_(sub[SUBMIT_ROUND_ID].as<int>());
 			add_round(sub[SUBMIT_ROUND_ID].as<int>(), from_round);
 		}
 		from_round->pointed++;
@@ -51,7 +65,7 @@ submit::submit(pqxx::result::tuple sub)
 			problem = map_tasks[sub[SUBMIT_PROB_ID].as<int>()];
 		else
 		{
-			problem = new task();
+			problem = new task(sub[SUBMIT_PROB_ID].as<int>());
 			add_problem(sub[SUBMIT_PROB_ID].as<int>(), problem);
 		}
 		problem->pointed++;
