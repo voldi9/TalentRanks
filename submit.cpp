@@ -3,9 +3,10 @@
 #define SUBMIT_CREATED 1
 #define SUBMIT_ROUND_ID 2
 #define SUBMIT_USER_ID 3
-#define SUBMIT_PROB_ID 4
-#define SUBMIT_STATUS 5
-#define SUBMIT_POINTS 6
+#define SUBMIT_TEAM_ID 4
+#define SUBMIT_PROB_ID 5
+#define SUBMIT_STATUS 6
+#define SUBMIT_POINTS 7
 
 /*
 void round_::update(submit * sub)
@@ -33,6 +34,7 @@ void submit::add()
 		{
 			old_points = row->points[it - from_round->lower_ids.begin()];
 			row->points[it - from_round->lower_ids.begin()] = total_points;
+			row->sum += (total_points - old_points);
 			break;
 		}
 	}
@@ -44,8 +46,8 @@ void submit::add()
 		{
 			if((*it) == from_round->id)
 			{
-				//printf("// %d\n", row->points.size());
 				row->points[it - from_round->s->lower_ids.begin()] += (total_points - old_points);
+				row->sum += (total_points - old_points);
 				break;
 			}
 		}
@@ -59,6 +61,7 @@ void submit::add()
 			if((*it) == from_round->s->id)
 			{
 				row->points[it - from_round->s->c->lower_ids.begin()] += (total_points - old_points);
+				row->sum += (total_points - old_points);
 				break;
 			}
 		}
@@ -93,13 +96,26 @@ submit::submit(pqxx::result::tuple sub)
 	if(!sub[SUBMIT_POINTS].is_null())
 		total_points = sub[SUBMIT_POINTS].as<int>();
 
-	if(!sub[SUBMIT_USER_ID].is_null())
+	if(!sub[SUBMIT_TEAM_ID].is_null())
+	{
+		if(map_solvers.find(sub[SUBMIT_TEAM_ID].as<int>()) != map_solvers.end())
+			solved = map_solvers[sub[SUBMIT_TEAM_ID].as<int>()];
+		else
+		{
+			solved = new solver(sub[SUBMIT_TEAM_ID].as<int>());
+			solved->is_team = true;
+			add_solver(solved);
+		}
+		solved->pointed++;
+	}
+	else if(!sub[SUBMIT_USER_ID].is_null())
 	{
 		if(map_solvers.find(sub[SUBMIT_USER_ID].as<int>()) != map_solvers.end())
 			solved = map_solvers[sub[SUBMIT_USER_ID].as<int>()];
 		else
 		{
 			solved = new solver(sub[SUBMIT_USER_ID].as<int>());
+			solved->is_team = false;
 			add_solver(solved);
 		}
 		solved->pointed++;

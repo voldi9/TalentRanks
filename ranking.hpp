@@ -13,6 +13,7 @@ class ranking
 		map <int, result*> map_ids;
 		void print();
 		int lower_num();
+		void update(int solver_id, int lower_id, int total_points);
 		ranking();
 		~ranking();
 };

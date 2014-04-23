@@ -5,6 +5,7 @@ CREATE TABLE new_submits(
 	created TIMESTAMP NOT NULL,
 	round_id INTEGER,
 	user_id INTEGER,
+	team_id INTEGER,
 	problem_id INTEGER,
 	status VARCHAR,
 	total_points INTEGER
@@ -23,6 +24,7 @@ BEGIN
 	 NEW.created,
 	 NEW.round_id,
 	 NEW.user_id,
+	 NEW.team_id,
 	 NEW.problem_id,
 	 NEW.status,
 	 NEW.total_points);

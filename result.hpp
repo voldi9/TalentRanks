@@ -8,6 +8,7 @@ class result
 	public:
 		int id;
 		int pointed; //how many pointers to this result are being used
+		int sum;
 		//solver * solved;
 		vector <short> points;
 		void print();

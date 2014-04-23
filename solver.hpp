@@ -6,6 +6,7 @@
 class solver
 {
 	public:
+		bool is_team;
 		int id;
 		int pointed; //how many pointers to this solver are being used
 		float team_factor;
