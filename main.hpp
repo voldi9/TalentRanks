@@ -42,11 +42,11 @@ pqxx::connection * database;
 
 void update_submit(pqxx::result::tuple submit);
 
-void add_solver(int id, solver * s);
-void add_problem(int id, task * t);
-int add_contest(int id, contest * c);
-int add_stage(int id, stage * s);
-int add_round(int id, round_ * r);
+void add_solver(solver * s);
+void add_problem(task * t);
+int add_contest(contest * c);
+int add_stage(stage * s);
+int add_round(round_ * r);
 //function keeps monitoring the changes in the submits database table
 int monitor();
 #include "task.cpp"

@@ -1,5 +1,14 @@
 #include "result.hpp"
 
+void result::print()
+{
+	printf("%d   ", id);
+	for(int i=0; i<points.size(); i++)
+		printf("%d ", points[i]);
+	puts("");
+	return;
+}
+
 result::~result(){ points.clear(); }
 
 result::result()

@@ -5,8 +5,8 @@ int contest::add_user(solver * solved)
 {
 	if(map_ids.find(solved->id) == map_ids.end()) //adding new contestant to this ranking
 	{
-		rows.push_back(result(solved->id, lower_num()));
-		result * res = &rows[rows.size()-1];
+		result * res = new result(solved->id, lower_num());
+		rows.push_back(res);
 		map_ids.insert(make_pair(solved->id, res));
 	}
 	//updating old contestant's points

@@ -17,8 +17,9 @@ int round_::add_user(solver * solved)
 {
 	if(map_ids.find(solved->id) == map_ids.end()) //adding new contestant to this ranking
 	{
-		rows.push_back(result(solved->id, lower_num()));
-		result * res = &rows[rows.size()-1];
+		printf("lower_num(): %d\n", lower_num());
+		result * res = new result(solved->id, lower_num());
+		rows.push_back(res);
 		map_ids.insert(make_pair(solved->id, res));
 		if(s)
 			s->add_user(solved);
@@ -30,8 +31,8 @@ int round_::add_user(solver * solved)
 round_::~round_()
 {
 	map_rounds.erase(id);
-	if(s)
-		delete s;
+	//if(s)
+	//	delete s;
 }
 
 round_::round_()

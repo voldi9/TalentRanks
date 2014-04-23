@@ -25,11 +25,13 @@ void round_::update(submit * sub)
 void submit::add()
 {
 	result * row = from_round->map_ids[solved->id];
+	int old_points;
 	//update points in round...
 	for(vector<int>::iterator it = from_round->lower_ids.begin(); it != from_round->lower_ids.end(); it++)
 	{
 		if((*it) == problem->id)
 		{
+			old_points = row->points[it - from_round->lower_ids.begin()];
 			row->points[it - from_round->lower_ids.begin()] = total_points;
 			break;
 		}
@@ -37,25 +39,26 @@ void submit::add()
 	//... stage...
 	if(from_round->s)
 	{
-		row = from_round->s->map_ids[from_round->id];
+		row = from_round->s->map_ids[solved->id];
 		for(vector<int>::iterator it = from_round->s->lower_ids.begin(); it != from_round->s->lower_ids.end(); it++)
 		{
 			if((*it) == from_round->id)
 			{
-				row->points[it - from_round->s->lower_ids.begin()] = total_points;
+				//printf("// %d\n", row->points.size());
+				row->points[it - from_round->s->lower_ids.begin()] += (total_points - old_points);
 				break;
 			}
 		}
 	}
 	//... and contest
-	if(from_round->s->c)
+	if(from_round->s && from_round->s->c)
 	{
-		row = from_round->s->c->map_ids[from_round->id];
+		row = from_round->s->c->map_ids[solved->id];
 		for(vector<int>::iterator it = from_round->s->c->lower_ids.begin(); it != from_round->s->c->lower_ids.end(); it++)
 		{
 			if((*it) == from_round->s->id)
 			{
-				row->points[it - from_round->s->c->lower_ids.begin()] = total_points;
+				row->points[it - from_round->s->c->lower_ids.begin()] += (total_points - old_points);
 				break;
 			}
 		}
@@ -65,12 +68,14 @@ void submit::add()
 submit::~submit()
 {
 	map_submits.erase(id);
+	/*
 	if(solved)
 		delete solved;
 	if(from_round)
 		delete from_round;
 	if(problem)
 		delete problem;
+	*/
 }
 
 submit::submit(pqxx::result::tuple sub)
@@ -90,13 +95,12 @@ submit::submit(pqxx::result::tuple sub)
 
 	if(!sub[SUBMIT_USER_ID].is_null())
 	{
-		if(map_solvers.find(sub[SUBMIT_USER_ID].as<int>()) != map_solvers.end()){
-			solved = map_solvers[sub[SUBMIT_USER_ID].as<int>()]; printf("stary\n"); }
+		if(map_solvers.find(sub[SUBMIT_USER_ID].as<int>()) != map_solvers.end())
+			solved = map_solvers[sub[SUBMIT_USER_ID].as<int>()];
 		else
 		{
-			printf("nowy\n");
 			solved = new solver(sub[SUBMIT_USER_ID].as<int>());
-			add_solver(sub[SUBMIT_USER_ID].as<int>(), solved);
+			add_solver(solved);
 		}
 		solved->pointed++;
 	}
@@ -108,7 +112,7 @@ submit::submit(pqxx::result::tuple sub)
 		else
 		{
 			from_round = new round_(sub[SUBMIT_ROUND_ID].as<int>());
-			add_round(sub[SUBMIT_ROUND_ID].as<int>(), from_round);
+			add_round(from_round);
 		}
 		from_round->pointed++;
 	}
@@ -120,7 +124,7 @@ submit::submit(pqxx::result::tuple sub)
 		else
 		{
 			problem = new task(sub[SUBMIT_PROB_ID].as<int>());
-			add_problem(sub[SUBMIT_PROB_ID].as<int>(), problem);
+			add_problem(problem);
 		}
 		problem->pointed++;
 	}

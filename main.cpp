@@ -5,8 +5,8 @@ string int_to_string(int x)
 	string s = "";
 	while(x)
 	{
-		s = s + char(48 + x%10);
-		x/=10;
+		s = char(48 + x%10) + s;
+		x /= 10;
 	}
 	return s;
 }
@@ -32,28 +32,29 @@ void update_submit(submit * sub)
 	return;
 }
 
-void add_solver(int id, solver * s)
+void add_solver(solver * s)
 {
 	//add and use constructor!
-	map_solvers.insert(make_pair(id, s));
+	map_solvers.insert(make_pair(s->id, s));
 	return;
 }
 
-void add_problem(int id, task * t)
+void add_problem(task * t)
 {
 	//add and use constructor!
-	map_tasks.insert(make_pair(id, t));
+	map_tasks.insert(make_pair(t->id, t));
 	return;
 }
 
-int add_contest(int id, contest * c)
+int add_contest(contest * c)
 {
 	pqxx::result results;
 	try{
 		pqxx::nontransaction read(*database);
-		results = read.exec("SELECT ord, id FROM contest_rounds\n"
+		results = read.exec("SELECT ord, id FROM contest_stages\n"
 							"WHERE contest_id = " + 
-							int_to_string(id) + ";");
+							int_to_string(c->id) + ";");
+		read.commit();
 		vector <pair<int, int>> stages;
 		stages.clear();
 		//sorting rounds in stage according to database tables
@@ -69,20 +70,23 @@ int add_contest(int id, contest * c)
 		cerr << e.what();
 		return 1;
 	}
-	map_contests.insert(make_pair(id, c));
+	map_contests.insert(make_pair(c->id, c));
 	return 0;
 }
 
-int add_stage(int id, stage * s)
+int add_stage(stage * s)
 {
+	printf("?! %d\n", s->id);
 	pqxx::result results;
 	try{
 		pqxx::nontransaction read(*database);
 		results = read.exec("SELECT ord, id FROM contest_rounds\n"
 							"WHERE contest_stage_id = " + 
-							int_to_string(id) + ";");
+							int_to_string(s->id) + ";");
+		read.commit();
 		vector <pair<int, int>> rounds;
 		rounds.clear();
+	
 		//sorting rounds in stage according to database tables
 		for(pqxx::result::const_iterator row = results.begin();
      		row != results.end();
@@ -100,7 +104,8 @@ int add_stage(int id, stage * s)
 		pqxx::nontransaction read(*database);
 		results = read.exec("SELECT contest_id FROM contest_stages\n"
 							"WHERE id = " + 
-							int_to_string(id) + ";");
+							int_to_string(s->id) + ";");
+		read.commit();
 		if(results.size())
 			if(exists(results[0][0].as<int>()))
 			{
@@ -110,28 +115,30 @@ int add_stage(int id, stage * s)
 			else
 			{
 				s->c = new contest(results[0][0].as<int>());
-				add_contest(results[0][0].as<int>(), s->c);
+				add_contest(s->c);
 			}
 	}
 	catch(const exception e){
 		cerr << e.what();
 		return 1;
 	}
-	map_stages.insert(make_pair(id, s));
+	map_stages.insert(make_pair(s->id, s));
 	return 0;
 }
 
-int add_round(int id, round_ * r)
+int add_round(round_ * r)
 {
 	//add and use constructor!
 	pqxx::result results;
 	try{ //detecting all problems in this round
 		pqxx::nontransaction read(*database);
-		results = read.exec("SELECT prefix_order, problem_id FROM contest_round_problems\n"
+		results = read.exec("SELECT ord, problem_id FROM contest_round_problems\n"
 							"WHERE contest_round_id = " + 
-							int_to_string(id) + ";");
+							int_to_string(r->id) + ";");
+		read.commit();
 		vector <pair<int, int>> problems;
 		problems.clear();
+
 		//sorting problems in round according to database tables
 		for(pqxx::result::const_iterator row = results.begin();
      		row != results.end();
@@ -145,12 +152,14 @@ int add_round(int id, round_ * r)
 		cerr << e.what();
 		return 1;
 	}
-
+	
 	try{ //detecting this round's stage
 		pqxx::nontransaction read(*database);
 		results = read.exec("SELECT contest_stage_id FROM contest_rounds\n"
 							"WHERE id = " + 
-							int_to_string(id) + ";");
+							int_to_string(r->id) + ";");
+		read.commit();
+
 		if(results.size())
 			if(exists(results[0][0].as<int>()))
 			{
@@ -160,7 +169,7 @@ int add_round(int id, round_ * r)
 			else
 			{
 				r->s = new stage(results[0][0].as<int>());
-				add_stage(results[0][0].as<int>(), r->s);
+				add_stage(r->s);
 			}
 	}
 	catch(const exception e){
@@ -168,10 +177,11 @@ int add_round(int id, round_ * r)
 		return 1;
 	}
 
-	map_rounds.insert(make_pair(id, r));
+	map_rounds.insert(make_pair(r->id, r));
 	return 0;
 }
-int zz = 2;
+
+int zz = 3;
 
 
 //function keeps monitoring the changes in the submits database table
@@ -199,13 +209,13 @@ int monitor()
      			row++)
      		{
      			//TODO: dodac written_test
-     			printf("waj???!!!\n");
      			submit * sub = new submit(row);
-
-     			if(!sub->solved || !sub->problem || !sub->from_round) //unknown solver's, round's or problem's id - nothing to be done
+     			//sub->add();
+     			if(!sub->solved || !sub->problem || !sub->from_round) //unknown solver's, round's or problem's id
+     			{
+     				delete sub;
      				continue;
-
-     			printf("noł!\n");
+     			}
      			map_submits.insert(make_pair(sub->id, sub));
      			sub->from_round->add_user(sub->solved);
 
@@ -216,19 +226,26 @@ int monitor()
      				row[SUBMIT_STATUS].as<string>() == CHECKER_CRIT_COMP_ERROR)	
      			{//zero pkt
      				//delete sub->solved;
-     				delete sub;
-     				printf("omgomg\n");
+     				//delete sub;
+     				sub->add();
+     				update_submit(sub); //usun
+
      				if(!zz--)
+     				{
+     					sub->from_round->print();
+     					//delete sub;
      					return 0;
+     				}
      				//while(1);
      			}
      			else if(row[SUBMIT_STATUS].as<string>() == CHECKER_CHECKED ||
-     					row[SUBMIT_STATUS].as<string>() == CHECKER_WRITTEN_TEST){
-     				printf("but wai??\n");
-     				update_submit(sub);}
-     			else{printf("waj???!!!\n");
+     					row[SUBMIT_STATUS].as<string>() == CHECKER_WRITTEN_TEST)
+     			{
+     				update_submit(sub);
+     			}
+     			else
      				//nie bierz pod uwage - nieznany status
-     				continue;  		}	
+     				continue;  
 
      			try{
 					pqxx::nontransaction write(*database);
@@ -256,6 +273,111 @@ int monitor()
 	return 0;
 }
 
+void print_maps()
+{
+	printf("\nsubmits:\n");
+	for(map<int, submit*>::iterator it = map_submits.begin(); it!=map_submits.end(); it++)
+	{
+		printf("%d, ", it->first);
+		//it->second->print();
+	}
+
+	printf("\nrounds:\n");
+	for(map<int, round_*>::iterator it = map_rounds.begin(); it!=map_rounds.end(); it++)
+	{
+		printf("%d:\n", it->first);
+		it->second->print();
+	}
+
+	printf("\nstages:\n");
+	for(map<int, stage*>::iterator it = map_stages.begin(); it!=map_stages.end(); it++)
+	{
+		printf("%d:\n", it->first);
+		it->second->print();
+	}
+
+	printf("\ncontests:\n");
+	for(map<int, contest*>::iterator it = map_contests.begin(); it!=map_contests.end(); it++)
+	{
+		printf("%d:\n", it->first);
+		it->second->print();
+	}
+
+	puts("");
+}
+
+
+void clear()
+{
+	for(map<int, submit*>::iterator it = map_submits.begin(); it!=map_submits.end(); it++)
+	{
+		submit * sub = it->second;
+		if(sub->from_round->s->c)
+			while(!sub->from_round->s->c->rows.empty())
+			{
+				delete sub->from_round->s->c->rows.back();
+				sub->from_round->s->c->rows.pop_back();
+			}
+
+		if(sub->from_round->s)
+			while(!sub->from_round->s->rows.empty())
+			{
+				delete sub->from_round->s->rows.back();
+				sub->from_round->s->rows.pop_back();
+			}
+
+
+		if(sub->from_round)
+			while(!sub->from_round->rows.empty())
+			{
+				delete sub->from_round->rows.back();
+				sub->from_round->rows.pop_back();
+			}
+	}
+
+	while(!map_solvers.empty())
+		delete map_solvers.begin()->second;
+
+	while(!map_tasks.empty())
+		delete map_tasks.begin()->second;
+
+	while(!map_rounds.empty())
+		delete map_rounds.begin()->second;
+
+	while(!map_stages.empty())
+		delete map_stages.begin()->second;
+
+	while(!map_contests.empty())
+		delete map_contests.begin()->second;
+
+	while(!map_submits.empty())
+		delete map_submits.begin()->second;
+/*	for(map<int, solver*>::iterator it = map_solvers.begin(); it!=map_solvers.end(); it++)
+		delete it->second;
+	map_solvers.clear();
+	/*
+	for(map<int, task*>::iterator it = map_tasks.begin(); it!=map_tasks.end(); it++)
+		delete it->second;
+	map_tasks.clear();
+
+	for(map<int, round_*>::iterator it = map_rounds.begin(); it!=map_rounds.end(); it++)
+		delete it->second;
+	map_rounds.clear();
+
+	for(map<int, stage*>::iterator it = map_stages.begin(); it!=map_stages.end(); it++)
+		delete it->second;
+	map_stages.clear();
+
+	for(map<int, contest*>::iterator it = map_contests.begin(); it!=map_contests.end(); it++)
+		delete it->second;
+	map_contests.clear();
+
+	for(map<int, submit*>::iterator it = map_submits.begin(); it!=map_submits.end(); it++)
+		delete it->second;
+	map_submits.clear();
+*/
+}
+
 int main()
 {
 	//trying to establish connection to the database
@@ -263,12 +385,13 @@ int main()
 		database = new pqxx::connection(dbcommand);
 		int monitor_success = monitor();
 		delete database;
-		return monitor_success;
+		//return monitor_success;
 	}
 	catch(const exception e){
 		cerr << e.what();
 		return 1;
 	}
-
+	print_maps();
+	clear();
 	return 0;
 }

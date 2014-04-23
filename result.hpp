@@ -10,6 +10,7 @@ class result
 		int pointed; //how many pointers to this result are being used
 		//solver * solved;
 		vector <short> points;
+		void print();
 		result();
 		result(int this_id, int num_problems);
 		~result();
