@@ -11,7 +11,7 @@ int ranking::lower_num()
 {
 	return lower_ids.size();
 }
-
+/*
 void ranking::update(int solver_id, int lower_id, int total_points)
 {
 	result * res = map_ids[solver_id];
@@ -26,12 +26,13 @@ void ranking::update(int solver_id, int lower_id, int total_points)
 		}
 	}
 }
-
+*/
 ranking::~ranking(){ rows.clear(); }
 
 ranking::ranking()
 {
 	pointed = 1;
+	last_submit = 0;
 	map_ids.clear();
 	rows.clear();
 }

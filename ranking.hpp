@@ -8,6 +8,7 @@ class ranking
 	public:
 		int id;
 		int pointed; //how many pointers to this ranking are being used
+		time_t last_submit;
 		vector <result*> rows;
 		vector <int> lower_ids;
 		map <int, result*> map_ids;

@@ -32,6 +32,7 @@ void submit::add()
 	{
 		if((*it) == problem->id)
 		{
+			from_round->last_submit = max(from_round->last_submit, created);
 			old_points = row->points[it - from_round->lower_ids.begin()];
 			row->points[it - from_round->lower_ids.begin()] = total_points;
 			row->sum += (total_points - old_points);
@@ -46,6 +47,7 @@ void submit::add()
 		{
 			if((*it) == from_round->id)
 			{
+				from_round->s->last_submit = max(from_round->s->last_submit, created);
 				row->points[it - from_round->s->lower_ids.begin()] += (total_points - old_points);
 				row->sum += (total_points - old_points);
 				break;
@@ -60,6 +62,7 @@ void submit::add()
 		{
 			if((*it) == from_round->s->id)
 			{
+				from_round->s->c->last_submit = max(from_round->s->c->last_submit, created);
 				row->points[it - from_round->s->c->lower_ids.begin()] += (total_points - old_points);
 				row->sum += (total_points - old_points);
 				break;

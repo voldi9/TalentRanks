@@ -6,11 +6,10 @@
 #include <vector>
 #include <algorithm>
 #include <ctime>
-#include <set>
 #include <map>
 #define dbcommand "dbname=oig2 user=oig2"
-#define CHECK_INTERVAL 100000
-#define SUC 2000000
+#define CHECK_INTERVAL 100000 //in microseconds
+#define SUC 500000	//this too
 #define CHECKER_CHECKED "Sprawdzono"
 #define CHECKER_CHECKING "Sprawdzanie"
 #define CHECKER_CRIT_COMP_ERROR "Krytyczny błąd kompilacji"
@@ -57,4 +56,5 @@ int monitor();
 #include "stage.cpp"
 #include "round.cpp"
 #include "submit.cpp"
+#include "utils.cpp"
 #endif
