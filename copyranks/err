@@ -1,7 +1,0 @@
-main.cpp: In function ‘int check_if_rank_in_base(int, int)’:
-main.cpp:50:48: error: expected ‘)’ before ‘;’ token
-    problems.push_back(make_pair(row(0), row(1));
-                                                ^
-main.cpp:53:37: error: ‘probles’ was not declared in this scope
-    query += ",\n\"" + int_to_string(probles[i].second) + "\" INTEGER NOT NULL DEFAULT 0";
-                                     ^
