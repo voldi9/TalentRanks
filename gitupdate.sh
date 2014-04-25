@@ -1,4 +1,4 @@
 #!/bin/bash
-git add *.cpp *.hpp *.sql *.sh
+git add app/* copyranks/* gitupdate.sh README.md
 git commit
 git push
