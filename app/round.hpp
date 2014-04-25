@@ -5,7 +5,6 @@
 class round_ : public ranking
 {
 	public:
-		int id;
 		stage * s;
 		//vector <int> problem_ids;
 		int add_user(solver * solved);

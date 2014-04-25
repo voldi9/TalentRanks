@@ -5,7 +5,6 @@
 class stage : public ranking
 {
 	public:
-		int id;
 		contest * c;
 		//vector <int> round_ids;
 		int add_user(solver * solved);

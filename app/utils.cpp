@@ -1,3 +1,5 @@
+#include "utils.hpp"
+
 string int_to_string(int x)
 {
 	if(x < 0)
@@ -11,6 +13,13 @@ string int_to_string(int x)
 	return s;
 }
 
+void clean_up()
+{
+	database->disconnect();
+	rankbase->disconnect();
+	delete database;
+	delete rankbase;
+}
 
 
 void print_maps()

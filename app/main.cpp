@@ -2,6 +2,7 @@
 
 //TODO: drop function
 //TODO: autodrop unused rankings
+//TODO: implement partial points coverage!
 
 void update_submit(submit * sub)
 {
@@ -37,14 +38,17 @@ int add_contest(contest * c)
 		//sorting rounds in stage according to database tables
 		for(pqxx::result::const_iterator row = results.begin();
 			row != results.end(); row++)
-			stages.push_back(make_pair(row[0].as<int>(), row[1].as<int>()));
+			if(row[0].is_null()) //assuming a non-ordered lower is before the ordered ones
+				stages.push_back(make_pair(-1, row(1)));
+			else
+				stages.push_back(make_pair(row(0), row(1)));
 		
 		sort(stages.begin(), stages.end());
 		for(int i=0; i<stages.size(); i++)
 			c->lower_ids.push_back(stages[i].second);
 	}
 	catch(const exception e){
-		cerr << e.what();
+		cerr << e.what() << "\n";
 		return 1;
 	}
 	map_contests.insert(make_pair(c->id, c));
@@ -66,14 +70,18 @@ int add_stage(stage * s)
 		//sorting rounds in stage according to database tables
 		for(pqxx::result::const_iterator row = results.begin();
 			row != results.end(); row++)
-			rounds.push_back(make_pair(row[0].as<int>(), row[1].as<int>()));
+			if(row[0].is_null()) //assuming a non-ordered lower is before the ordered ones
+				rounds.push_back(make_pair(-1, row(1)));
+			else
+				rounds.push_back(make_pair(row(0), row(1)));
+		
 
 		sort(rounds.begin(), rounds.end());
 		for(int i=0; i<rounds.size(); i++)
 			s->lower_ids.push_back(rounds[i].second);
 	}
 	catch(const exception e){
-		cerr << e.what();
+		cerr << e.what() << "\n";
 		return 1;
 	}
 	try{ //detecting stages contest
@@ -95,7 +103,7 @@ int add_stage(stage * s)
 			}
 	}
 	catch(const exception e){
-		cerr << e.what();
+		cerr << e.what() << "\n";
 		return 1;
 	}
 	map_stages.insert(make_pair(s->id, s));
@@ -118,13 +126,17 @@ int add_round(round_ * r)
 		//sorting problems in round according to database tables
 		for(pqxx::result::const_iterator row = results.begin();
 			row != results.end(); row++)
-			problems.push_back(make_pair(row[0].as<int>(), row[1].as<int>()));
+			if(row[0].is_null()) //assuming a non-ordered lower is before the ordered ones
+				problems.push_back(make_pair(-1, row(1)));
+			else
+				problems.push_back(make_pair(row(0), row(1)));
+		
 		sort(problems.begin(), problems.end());
 		for(int i=0; i<problems.size(); i++)
 			r->lower_ids.push_back(problems[i].second);
 	}
 	catch(const exception e){
-		cerr << e.what();
+		cerr << e.what() << "\n";
 		return 1;
 	}
 	
@@ -148,7 +160,7 @@ int add_round(round_ * r)
 			}
 	}
 	catch(const exception e){
-		cerr << e.what();
+		cerr << e.what() << "\n";
 		return 1;
 	}
 
@@ -158,7 +170,29 @@ int add_round(round_ * r)
 }
 
 //int zz = 2;
-
+int check_if_rank_in_base(ranking * r)
+{
+	pqxx::result results;
+	printf("tu!\n");
+	try{ //detecting all problems in this round
+		pqxx::nontransaction write(*rankbase);
+		string query = "CREATE TABLE IF NOT EXISTS \"" + int_to_string(r->id)  + "\"(\n" + 
+						"user_id INTEGER NOT NULL,\n"
+						"team_id INTEGER NOT NULL,\n"
+						"points INTEGER NOT NULL DEFAULT 0";
+		for(vector<int>::iterator it = r->lower_ids.begin(); it != r->lower_ids.end(); it++)
+			query += ",\n\"" + int_to_string(*it) + "\" INTEGER NOT NULL DEFAULT 0";
+		query += "\n);";
+		printf("%s\n", query.c_str());
+		write.exec(query);
+		write.commit();
+	}
+	catch(const exception e){
+		cerr << e.what() << "\n";
+		return 1;
+	}
+	return 0;
+}
 
 void handle(submit * sub, string status)
 {
@@ -169,6 +203,12 @@ void handle(submit * sub, string status)
 		delete sub;
 		return;
 	}
+
+	check_if_rank_in_base(sub->from_round);
+	if(sub->from_round->s)
+		check_if_rank_in_base(sub->from_round->s);
+	if(sub->from_round->s && sub->from_round->s->c)
+		check_if_rank_in_base(sub->from_round->s->c);
 
 	map_submits.insert(make_pair(sub->id, sub));
 	sub->from_round->add_user(sub->solved);
@@ -209,7 +249,7 @@ int monitor()
 			read.commit();
 		}
 		catch(const exception e){
-			cerr << e.what();
+			cerr << e.what() << "\n";
 			return 1;
 		}
 
@@ -222,10 +262,10 @@ int monitor()
 				//TODO: dodac written_test
 				submit * sub;
 
-				if(map_submits.find(row[SUBMIT_ID]) == map_submits.end())
+				if(map_submits.find(row(SUBMIT_ID)) == map_submits.end())
 					sub = new submit(row);
 				else
-					sub = map_submits[row[SUBMIT_ID]];
+					sub = map_submits[row(SUBMIT_ID)];
 
 				try{
 					pqxx::nontransaction write(*database);
@@ -236,7 +276,7 @@ int monitor()
 					write.commit();
 				}
 				catch(const exception e){
-					cerr << e.what();
+					cerr << e.what() << "\n";
 					return 1;
 				}
 
@@ -267,10 +307,11 @@ int pickup_ranking(round_ * r)
 {
 	pqxx::result results;
 	try{
+		printf("ok\n");
 		pqxx::nontransaction read(*database);
-		read.exec("SELECT submit_id FROM rank_caches"
-					"WHERE contest_round_id = " + 
-					int_to_string(r->id) + ";");
+		results = read.exec("SELECT submit_id FROM rank_caches\n"
+							"WHERE contest_round_id = " + 
+							int_to_string(r->id) + ";");
 		read.commit();	
 		printf("//\\ %d\n", results.size());
 		for(pqxx::result::const_iterator row = results.begin();
@@ -280,7 +321,8 @@ int pickup_ranking(round_ * r)
 		}
 	}
 	catch(const exception e){
-		cerr << e.what();
+		printf("nie ok\n");
+		cerr << e.what() << "\n";
 		return 1;
 	}
 }
@@ -298,7 +340,7 @@ int pickup_round(int id)
 			return 1;
 	}
 	catch(const exception e){
-		cerr << e.what();
+		cerr << e.what() << "\n";
 		return 1;
 	}*/
 	puts("dafuq?!\n");
@@ -312,17 +354,18 @@ int main()
 {
 	//trying to establish connection to the database
 	try{
-		database = new pqxx::connection(dbcommand);
-		//int monitor_success = monitor();
+		database = new pqxx::connection(dbparams);
+		rankbase = new pqxx::connection(rankdbparams);
+		int monitor_success = monitor();
 		//return monitor_success;
 	}
 	catch(const exception e){
-		cerr << e.what();
+		cerr << e.what() << "\n";
 		return 1;
 	}
+	//pickup_round(22101);
 	print_maps();
 	clear();
-	pickup_round(22101);
-	delete database; //wloz do try{} wyzej
+	clean_up();
 	return 0;
 }
