@@ -47,9 +47,13 @@ int add_contest(contest * c)
 		for(int i=0; i<stages.size(); i++)
 			c->lower_ids.push_back(stages[i].second);
 	}
+	catch(const pqxx::sql_error e)
+		cerr << e.what() << "\n";
+		return -1;
+	}
 	catch(const exception e){
 		cerr << e.what() << "\n";
-		return 1;
+		return -1;
 	}
 	map_contests.insert(make_pair(c->id, c));
 	return 0;
@@ -80,9 +84,13 @@ int add_stage(stage * s)
 		for(int i=0; i<rounds.size(); i++)
 			s->lower_ids.push_back(rounds[i].second);
 	}
+	catch(const pqxx::sql_error e)
+		cerr << e.what() << "\n";
+		return -1;
+	}
 	catch(const exception e){
 		cerr << e.what() << "\n";
-		return 1;
+		return -1;
 	}
 	try{ //detecting stages contest
 		pqxx::nontransaction read(*database);
@@ -102,9 +110,13 @@ int add_stage(stage * s)
 				add_contest(s->c);
 			}
 	}
+	catch(const pqxx::sql_error e)
+		cerr << e.what() << "\n";
+		return -1;
+	}
 	catch(const exception e){
 		cerr << e.what() << "\n";
-		return 1;
+		return -1;
 	}
 	map_stages.insert(make_pair(s->id, s));
 	return 0;
@@ -135,9 +147,13 @@ int add_round(round_ * r)
 		for(int i=0; i<problems.size(); i++)
 			r->lower_ids.push_back(problems[i].second);
 	}
+	catch(const pqxx::sql_error e)
+		cerr << e.what() << "\n";
+		return -1;
+	}
 	catch(const exception e){
 		cerr << e.what() << "\n";
-		return 1;
+		return -1;
 	}
 	
 	try{ //detecting this round's stage
@@ -159,9 +175,13 @@ int add_round(round_ * r)
 				add_stage(r->s);
 			}
 	}
+	catch(const pqxx::sql_error e)
+		cerr << e.what() << "\n";
+		return -1;
+	}
 	catch(const exception e){
 		cerr << e.what() << "\n";
-		return 1;
+		return -1;
 	}
 
 	map_rounds.insert(make_pair(r->id, r));
@@ -187,9 +207,13 @@ int check_if_rank_in_base(ranking * r)
 		write.exec(query);
 		write.commit();
 	}
+	catch(const pqxx::sql_error e)
+		cerr << e.what() << "\n";
+		return -1;
+	}
 	catch(const exception e){
 		cerr << e.what() << "\n";
-		return 1;
+		return -1;
 	}
 	return 0;
 }
@@ -248,9 +272,13 @@ int monitor()
 			results = read.exec("SELECT * FROM new_submits;");
 			read.commit();
 		}
+		catch(const pqxx::sql_error e)
+			cerr << e.what() << "\n";
+			return -1;
+		}
 		catch(const exception e){
 			cerr << e.what() << "\n";
-			return 1;
+			return -1;
 		}
 
 		//process all of them
@@ -275,9 +303,13 @@ int monitor()
 					printf("%s\n", row[SUBMIT_ID].as<string>().c_str());
 					write.commit();
 				}
+				catch(const pqxx::sql_error e)
+					cerr << e.what() << "\n";
+					return -1;
+				}
 				catch(const exception e){
 					cerr << e.what() << "\n";
-					return 1;
+					return -1;
 				}
 
 				if(row[SUBMIT_STATUS].is_null())
@@ -320,10 +352,14 @@ int pickup_ranking(round_ * r)
 
 		}
 	}
+	catch(const pqxx::sql_error e)
+		cerr << e.what() << "\n";
+		return -1;
+	}
 	catch(const exception e){
 		printf("nie ok\n");
 		cerr << e.what() << "\n";
-		return 1;
+		return -1;
 	}
 }
 
@@ -337,11 +373,15 @@ int pickup_round(int id)
 					int_to_string(id) + ";");
 		read.commit();
 		if(!results.size()) //no round with such an id
-			return 1;
+			return -1;
+	}
+	catch(const pqxx::sql_error e){
+		cerr << e.what() << "\n";
+		return -1;
 	}
 	catch(const exception e){
 		cerr << e.what() << "\n";
-		return 1;
+		return -1;
 	}*/
 	puts("dafuq?!\n");
 	//this round may not exist at all!!!
@@ -359,9 +399,13 @@ int main()
 		int monitor_success = monitor();
 		//return monitor_success;
 	}
+	catch(const pqxx::sql_error e)
+		cerr << e.what() << "\n";
+		return -1;
+	}
 	catch(const exception e){
 		cerr << e.what() << "\n";
-		return 1;
+		return -1;
 	}
 	//pickup_round(22101);
 	print_maps();
