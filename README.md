@@ -2,7 +2,7 @@ A single field in column named with problem/round/stage id in each table from ra
 
 field_value = MULTIPL * partial_points + total_points
 
-right now MULTIP = 100000
+right now MULTIP = 100000 //thus it's only safe to have no more than 999 problems in a contest
 
 this way, one can easily access both total_points value as well as partial_points value by fetching just one integer.
 
