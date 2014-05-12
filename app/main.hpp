@@ -1,5 +1,6 @@
 #ifndef main_hpp
 #define main_hpp
+#include "shared.hpp"
 #include <iostream>
 #include <pqxx/pqxx>
 #include <unistd.h>
@@ -10,7 +11,7 @@
 #define dbparams "dbname=oig2 user=oig2"
 #define rankdbparams "dbname=rankings user=oig2"
 #define CHECK_INTERVAL 100000 //in microseconds
-#define SUC 500000	//this too
+#define SUCCESS 1000000	//this too
 #define CHECKER_CHECKED "Sprawdzono"
 #define CHECKER_CHECKING "Sprawdzanie"
 #define CHECKER_CRIT_COMP_ERROR "Krytyczny błąd kompilacji"
@@ -21,8 +22,6 @@
 #define CHECKER_PLAGIARISM "PLAGIAT!"
 #define row(i) row[i].as<int>()
 
-using namespace std;
-
 class ranking;
 class contest;
 class stage;
@@ -31,6 +30,7 @@ class solver;
 class task;
 class submit;
 class result;
+
 
 map <int, round_*> map_rounds; //might wanna change the key type to long long in the future
 map <int, stage*> map_stages;

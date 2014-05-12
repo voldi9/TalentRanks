@@ -48,6 +48,7 @@ int add_contest(contest * c)
 			c->lower_ids.push_back(stages[i].second);
 	}
 	catch(const pqxx::sql_error e)
+	{
 		cerr << e.what() << "\n";
 		return -1;
 	}
@@ -85,6 +86,7 @@ int add_stage(stage * s)
 			s->lower_ids.push_back(rounds[i].second);
 	}
 	catch(const pqxx::sql_error e)
+	{
 		cerr << e.what() << "\n";
 		return -1;
 	}
@@ -111,6 +113,7 @@ int add_stage(stage * s)
 			}
 	}
 	catch(const pqxx::sql_error e)
+	{
 		cerr << e.what() << "\n";
 		return -1;
 	}
@@ -148,6 +151,7 @@ int add_round(round_ * r)
 			r->lower_ids.push_back(problems[i].second);
 	}
 	catch(const pqxx::sql_error e)
+	{
 		cerr << e.what() << "\n";
 		return -1;
 	}
@@ -176,6 +180,7 @@ int add_round(round_ * r)
 			}
 	}
 	catch(const pqxx::sql_error e)
+	{
 		cerr << e.what() << "\n";
 		return -1;
 	}
@@ -190,33 +195,6 @@ int add_round(round_ * r)
 }
 
 //int zz = 2;
-int check_if_rank_in_base(ranking * r)
-{
-	pqxx::result results;
-	printf("tu!\n");
-	try{ //detecting all problems in this round
-		pqxx::nontransaction write(*rankbase);
-		string query = "CREATE TABLE IF NOT EXISTS \"" + int_to_string(r->id)  + "\"(\n" + 
-						"user_id INTEGER NOT NULL,\n"
-						"team_id INTEGER NOT NULL,\n"
-						"points INTEGER NOT NULL DEFAULT 0";
-		for(vector<int>::iterator it = r->lower_ids.begin(); it != r->lower_ids.end(); it++)
-			query += ",\n\"" + int_to_string(*it) + "\" INTEGER NOT NULL DEFAULT 0";
-		query += "\n);";
-		printf("%s\n", query.c_str());
-		write.exec(query);
-		write.commit();
-	}
-	catch(const pqxx::sql_error e)
-		cerr << e.what() << "\n";
-		return -1;
-	}
-	catch(const exception e){
-		cerr << e.what() << "\n";
-		return -1;
-	}
-	return 0;
-}
 
 void handle(submit * sub, string status)
 {
@@ -257,14 +235,17 @@ void handle(submit * sub, string status)
 		return;  
 
 	printf("success!\n\n");
-	usleep(SUC);
+	usleep(SUCCESS);
 }
+int zz = 0;
 //function keeps monitoring the changes in the submits database table
 int monitor()
 {
 	//---------------UNCOMMENT!!!!
-	//while(true)
+	while(true)
 	{
+		zz++;
+		semop(sem_id, &P, 1);
 		pqxx::result results;
 		//check for fresh submits
 		try{
@@ -273,6 +254,7 @@ int monitor()
 			read.commit();
 		}
 		catch(const pqxx::sql_error e)
+		{
 			cerr << e.what() << "\n";
 			return -1;
 		}
@@ -304,6 +286,7 @@ int monitor()
 					write.commit();
 				}
 				catch(const pqxx::sql_error e)
+				{
 					cerr << e.what() << "\n";
 					return -1;
 				}
@@ -318,6 +301,8 @@ int monitor()
 					handle(sub, row[SUBMIT_STATUS].as<string>());
 			}
 		}
+		semop(sem_id, &V, 1);
+		printf("SUCCESS! %d\n", zz);
 		usleep(CHECK_INTERVAL);
 	}
 	//database->disconnect();
@@ -353,6 +338,7 @@ int pickup_ranking(round_ * r)
 		}
 	}
 	catch(const pqxx::sql_error e)
+	{
 		cerr << e.what() << "\n";
 		return -1;
 	}
@@ -375,7 +361,8 @@ int pickup_round(int id)
 		if(!results.size()) //no round with such an id
 			return -1;
 	}
-	catch(const pqxx::sql_error e){
+	catch(const pqxx::sql_error e)
+	{{
 		cerr << e.what() << "\n";
 		return -1;
 	}
@@ -390,16 +377,22 @@ int pickup_round(int id)
 	pickup_ranking(r);
 }
 
+
 int main()
 {
 	//trying to establish connection to the database
 	try{
 		database = new pqxx::connection(dbparams);
 		rankbase = new pqxx::connection(rankdbparams);
+		sem_id = semget(SEM_KEY, 1, 0666 | IPC_CREAT);
+		semctl(sem_id, 0, SETVAL, 1); //set the semaphore value to 1
+		//printf("%d\n", sem_id);
+		//printf("! %d\n", semctl(sem_id, 0, GETVAL));
 		int monitor_success = monitor();
 		//return monitor_success;
 	}
 	catch(const pqxx::sql_error e)
+	{
 		cerr << e.what() << "\n";
 		return -1;
 	}

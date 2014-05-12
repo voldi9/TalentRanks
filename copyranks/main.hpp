@@ -7,10 +7,11 @@
 #include <algorithm>
 #include <ctime>
 #include <map>
+#include <set>
 #define dbparams "dbname=oig2 user=oig2"
 #define rankdbparams "dbname=rankings user=oig2"
 #define CHECK_INTERVAL 100000 //in microseconds
-#define SUC 500000	//this too
+#define SUCCESS 500000	//this too
 #define CHECKER_CHECKED "Sprawdzono"
 #define CHECKER_CHECKING "Sprawdzanie"
 #define CHECKER_CRIT_COMP_ERROR "Krytyczny błąd kompilacji"
@@ -19,6 +20,14 @@
 #define CHECKER_COMP_ERROR "Błąd kompilacji"
 #define CHECKER_WRITTEN_TEST "Test pisemny"
 #define CHECKER_PLAGIARISM "PLAGIAT!"
+#define RANK_ID 0
+#define RANK_SUB_ID 1
+#define RANK_ROUND_ID 2
+#define RANK_USER_ID 3
+#define RANK_TEAM_ID 4
+#define RANK_PROB_ID 5
+#define RANK_STATUS 6
+#define RANK_POINTS 7
 #define USER_ID 1
 #define TEAM_ID 2
 #define PROB_ID 3
@@ -30,6 +39,9 @@
 #define ROUND 0
 #define STAGE 1
 #define CONTEST 2
+#define USER 0
+#define TEAM 1
+#define MULTIPL 100000
 #define row(i) row[i].as<int>()
 
 using namespace std;
@@ -43,9 +55,7 @@ const string contest_query = "SELECT ord, id FROM contest_stages\n"
 pqxx::connection * database;
 pqxx::connection * rankbase;
 
-int check_if_rank_in_base(int id, int flag);
-string int_to_string(int x);
-int copy_ranks();
+
 int main();
 
 #include "utils.cpp"

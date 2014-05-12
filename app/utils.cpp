@@ -1,5 +1,35 @@
 #include "utils.hpp"
 
+int check_if_rank_in_base(ranking * r)
+{
+	pqxx::result results;
+	//printf("tu!\n");
+	try{ //detecting all problems in this round
+		pqxx::nontransaction write(*rankbase);
+		string query = "CREATE TABLE IF NOT EXISTS \"" + int_to_string(r->id)  + "\"(\n" + 
+						"user_id INTEGER NOT NULL,\n"
+						"team_id INTEGER NOT NULL,\n"
+						"points INTEGER NOT NULL DEFAULT 0";
+		for(vector<int>::iterator it = r->lower_ids.begin(); it != r->lower_ids.end(); it++)
+			query += ",\n\"" + int_to_string(*it) + "\" INTEGER NOT NULL DEFAULT 0";
+		query += "\n);";
+		//printf("%s\n", query.c_str());
+		write.exec(query);
+		write.commit();
+	}
+	catch(const pqxx::sql_error e)
+	{
+		cerr << e.what() << "\n";
+		return -1;
+	}
+	catch(const exception e){
+		cerr << e.what() << "\n";
+		return -1;
+	}
+	return 0;
+}
+
+
 string int_to_string(int x)
 {
 	if(x < 0)
