@@ -206,11 +206,11 @@ void handle(submit * sub, string status)
 		return;
 	}
 
-	check_if_rank_in_base(sub->from_round);
+	check_if_rank_in_base(sub->from_round->id, ROUND);
 	if(sub->from_round->s)
-		check_if_rank_in_base(sub->from_round->s);
+		check_if_rank_in_base(sub->from_round->s->id, STAGE);
 	if(sub->from_round->s && sub->from_round->s->c)
-		check_if_rank_in_base(sub->from_round->s->c);
+		check_if_rank_in_base(sub->from_round->s->c->id, CONTEST);
 
 	map_submits.insert(make_pair(sub->id, sub));
 	sub->from_round->add_user(sub->solved);
