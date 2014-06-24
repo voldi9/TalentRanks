@@ -1,4 +1,4 @@
 #!/bin/bash
 
-createdb rankings
+createdb rankings -U oig2 -O oig2
 psql rankings -U oig2 < setupnewdb.sql

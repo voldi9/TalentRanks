@@ -13,3 +13,4 @@ Assumption: every round, stage and contest is also a ranking.
 contest's lower is a stage that belongs to this contest,
 stages's lower is a round that belongs to this stage,
 round's lower is a problem that belongs to this round.
+

@@ -40,7 +40,6 @@
 #define MULTIPL 100000
 #define row(i) row[i].as<int>()
 #define SEM_KEY ftok(".",'a')
-#define MULTIPL 100000
 
 using namespace std;
 

@@ -2,7 +2,7 @@
 #define stage_hpp
 #include "main.hpp"
 
-class stage : public ranking
+class stage : public group
 {
 	public:
 		contest * c;

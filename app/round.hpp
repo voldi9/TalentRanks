@@ -2,7 +2,7 @@
 #define round_hpp
 #include "main.hpp"
 
-class round_ : public ranking
+class round_ : public group
 {
 	public:
 		stage * s;

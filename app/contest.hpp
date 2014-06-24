@@ -2,7 +2,7 @@
 #define contest_hpp
 #include "main.hpp"
 
-class contest : public ranking
+class contest : public group
 {
 	public:
 		//vector <int> stage_ids;

@@ -202,7 +202,8 @@ void clean_up()
 	delete rankbase;
 }
 
-
+// function just prints all the ids of all groups and submits stored currently in memory 
+// (NOT all these stored in database)
 void print_maps()
 {
 	printf("\nsubmits:\n");
@@ -236,7 +237,8 @@ void print_maps()
 	puts("");
 }
 
-
+// function deletes all pointers and clears all maps (generally should not be used unless one wants to terminate
+// the application)
 void clear()
 {
 	for(map<int, submit*>::iterator it = map_submits.begin(); it!=map_submits.end(); it++)

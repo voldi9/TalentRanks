@@ -10,10 +10,11 @@
 #include <map>
 #include <set>
 
-class ranking;
+class group;
 class contest;
 class stage;
 class round_;
+class ranking;
 class solver;
 class task;
 class submit;
@@ -36,9 +37,9 @@ void add_problem(task * t);
 int add_contest(contest * c);
 int add_stage(stage * s);
 int add_round(round_ * r);
-int check_if_rank_in_base(ranking * r);
+int check_if_rank_in_base(group * r);
 void handle(submit * sub, string status);
-int pickup_ranking(round_ * r);
+int pickup_ranking(ranking * r);
 int pickup_round(int id);
 //function keeps monitoring the changes in the submits database table
 int monitor();
@@ -47,10 +48,11 @@ int main();
 #include "task.cpp"
 #include "result.cpp"
 #include "solver.cpp"
-#include "ranking.cpp"
+#include "group.cpp"
 #include "contest.cpp"
 #include "stage.cpp"
 #include "round.cpp"
 #include "submit.cpp"
+#include "ranking.cpp"
 #include "utils.cpp"
 #endif

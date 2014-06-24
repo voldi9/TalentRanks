@@ -320,8 +320,9 @@ int monitor()
 /*
 	BEZSENS :::: !!!!!!!!!!!
 */
-int pickup_ranking(round_ * r)
+int pickup_ranking(ranking * r)
 {
+	/*
 	pqxx::result results;
 	try{
 		printf("ok\n");
@@ -346,7 +347,8 @@ int pickup_ranking(round_ * r)
 		printf("nie ok\n");
 		cerr << e.what() << "\n";
 		return -1;
-	}
+	}*/
+	return 0;
 }
 
 int pickup_round(int id)
@@ -362,7 +364,7 @@ int pickup_round(int id)
 			return -1;
 	}
 	catch(const pqxx::sql_error e)
-	{{
+	{
 		cerr << e.what() << "\n";
 		return -1;
 	}
@@ -374,7 +376,8 @@ int pickup_round(int id)
 	//this round may not exist at all!!!
 	round_ * r = new round_(id);
 	add_round(r);
-	pickup_ranking(r);
+	//uncomment below and r must be a ranking
+	//pickup_ranking(r);
 }
 
 
